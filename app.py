@@ -5,7 +5,7 @@ import pandas as pd
 
 # Gerekli kütüphaneler (Hugging Face'e yüklediğinizden emin olun)
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter # GÜNCELLEME 1: Recursive Splitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import ChatPromptTemplate # GÜNCELLEME 3: Prompt için
