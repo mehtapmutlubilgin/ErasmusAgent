@@ -1,4 +1,3 @@
-
 import gradio as gr
 import os
 import pandas as pd
@@ -6,9 +5,10 @@ import pandas as pd
 # Gerekli kütüphaneler (Hugging Face'e yüklediğinizden emin olun)
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.prompts import ChatPromptTemplate # GÜNCELLEME 3: Prompt için
+from langchain.prompts import ChatPromptTemplate  # GÜNCELLEME 3: Prompt için
+
 
 # GÜNCELLEME 3: Sistem Şablonu (System Prompt)
 SYSTEM_TEMPLATE = """
