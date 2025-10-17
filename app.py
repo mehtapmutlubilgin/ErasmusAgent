@@ -2,15 +2,15 @@ import gradio as gr
 import os
 import pandas as pd
 
-# Gerekli kütüphaneler (Hugging Face'e yüklediğinizden emin olun)
+# Gerekli kütüphaneler (LangChain 0.3.x yapısına uygun)
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.prompts import ChatPromptTemplate  # GÜNCELLEME 3: Prompt için
+from langchain.prompts import ChatPromptTemplate
 
 
-# GÜNCELLEME 3: Sistem Şablonu (System Prompt)
+# 🔹 Sistem Prompt (güncel)
 SYSTEM_TEMPLATE = """
 Sen bir Erasmus+ bilgilendirme uzmanısın. Kullanıcının sorusuna sadece ve kesinlikle 
 SAĞLANAN KAYNAK METİNLERİ kullanarak cevap ver. 
@@ -21,22 +21,17 @@ Cevaplarını her zaman Türkçe olarak ve net bir dille sun.
 KAYNAK: {context}
 """
 
-# RAG ZİNCİRİNİ BAŞLATMA FONKSİYONU
+# 🔹 RAG Zinciri Kurulumu
 def setup_rag_chain():
     """RAG zincirini kurar ve döndürür."""
-    
-    # 1. API Anahtarını Yükleme (Hugging Face Secrets'tan)
     try:
         GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
         if not GEMINI_API_KEY:
-             # Eğer anahtar yoksa, hata döndür.
-             raise ValueError("API anahtarı (GEMINI_API_KEY) Hugging Face Secrets'ta bulunamadı.")
-        os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
+            raise ValueError("API anahtarı (GEMINI_API_KEY) Hugging Face Secrets'ta bulunamadı.")
     except Exception as e:
         print(f"HATA: API Anahtarı yüklenemedi: {e}")
         return None
     
-    # 2. Veri Setini Okuma (Yerel Dizin)
     try:
         DATA_FILE_PATH = 'erasmus_chatbot_dataset.csv' 
         df = pd.read_csv(DATA_FILE_PATH)
@@ -46,84 +41,81 @@ def setup_rag_chain():
         print(f"HATA: Veri Seti Okuma Başarısız: {e}")
         return None
 
-    # 3. RAG Mimarisi Kurulumu
-    
-    # GÜNCELLEME 1: RecursiveCharacterTextSplitter kullanarak daha iyi parçalama
+    # 🔹 Metinleri parçalara ayır
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,        # Maksimum parça boyutu
-        chunk_overlap=50,      # Parçaların örtüşme miktarı (bağlam kaybını önler)
-        length_function=len,
-        is_separator_regex=False,
+        chunk_size=500,
+        chunk_overlap=50,
+        length_function=len
     )
     texts = text_splitter.create_documents(documents_for_rag)
 
-    # API anahtarını doğrudan ilet
+    # 🔹 Embedding ve veritabanı
     embeddings = GoogleGenerativeAIEmbeddings(
         model="text-embedding-004",
         google_api_key=GEMINI_API_KEY
     )
     db = Chroma.from_documents(texts, embeddings)
 
-    # API anahtarını doğrudan ilet
+    # 🔹 LLM (Gemini 2.5)
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash", 
-        temperature=0, # Yaratıcılığı azaltıp kesin bilgiye yönlendirdik
+        model="gemini-2.5-flash",
+        temperature=0,
         google_api_key=GEMINI_API_KEY
     )
-    
-    # GÜNCELLEME 3: Prompt Şablonunu Oluşturma
+
+    # 🔹 Prompt Şablonu
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_TEMPLATE),
         ("human", "{question}"),
     ])
 
-    # GÜNCELLEME 2 & 3: RetrievalQA Zinciri
+    # 🔹 RetrievalQA zinciri
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=db.as_retriever(k=5), # k değerini 5'e çıkardık (Daha fazla bağlam)
+        retriever=db.as_retriever(k=5),
         return_source_documents=True,
-        # Prompt'u chain_type_kwargs üzerinden ekleyerek System Prompt'u etkinleştir
         chain_type_kwargs={
-             "prompt": qa_prompt,
-             "document_variable_name": "context" # Prompt'taki context değişkenini eşleştirir
+            "prompt": qa_prompt,
+            "document_variable_name": "context"
         }
     )
     
-    print("RAG Zinciri başarıyla kuruldu ve optimize edildi.")
+    print("✅ RAG Zinciri başarıyla kuruldu.")
     return qa_chain
 
-# Global olarak RAG zincirini bir kere yükle
+
 qa_chain = setup_rag_chain()
 
+
+# 🔹 Chatbot cevabı
 def chatbot_response(message, history):
-    """Gelen mesajı RAG zincirine gönderir ve cevabı döndürür."""
-    
     if qa_chain is None:
-        return "Chatbot kurulumu başarısız oldu. Lütfen Hugging Face Secrets ve logları kontrol edin."
+        return "❌ Chatbot kurulumu başarısız oldu. Lütfen API anahtarını kontrol edin."
 
     response = qa_chain({"query": message})
     answer = response['result']
     source_docs = response['source_documents']
-    
-    # Kaynak Bilgisini Hazırlama
-    sources_text = "\n\n***\n**Kaynaklar:**\n"
+
+    sources_text = "\n\n---\n**Kaynaklar:**\n"
     for doc in source_docs:
-        # Kaynak metin formatını daha anlaşılır hale getir
         content = doc.page_content.replace('Soru:', 'Soru: ').replace('. Cevap:', ' | Cevap: ')
-        sources_text += f"*{content[:150]}...*\n"
+        sources_text += f"- {content[:150]}...\n"
 
-    full_response = answer + sources_text
-    
-    return full_response
+    return answer + sources_text
 
-# GRADIO ARAYÜZÜ
+
+# 🔹 Gradio Arayüzü
 iface = gr.ChatInterface(
     fn=chatbot_response,
-    title="🇪🇺 Erasmus RAGent Chatbot (Optimize Edilmiş)", 
+    title="🇪🇺 Erasmus RAGent Chatbot (Optimize Edilmiş)",
     description="RAG (Retrieval Augmented Generation) ile Erasmus+ Bilgilendirme Sistemi. Sorularınızı sorabilirsiniz!",
     chatbot=gr.Chatbot(height=500),
-    examples=["Erasmus'a kimler başvurabilir?", "Öğrenim süresi ne kadardır?", "Hibesiz Erasmus yapılabilir mi?"],
+    examples=[
+        "Erasmus'a kimler başvurabilir?",
+        "Öğrenim süresi ne kadardır?",
+        "Hibesiz Erasmus yapılabilir mi?"
+    ],
     theme="soft"
 )
 
