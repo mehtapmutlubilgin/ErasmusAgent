@@ -1,19 +1,22 @@
 
 # ==============================================================================
 # PROJE: Erasmus RAGent Chatbot (Akbank GenAI Bootcamp)
-# DOSYA: app.py (Gradio Arayüzü ve RAG Pipeline Tanımı)
+# DOSYA: app.py (Final Sürüm - Stabil İçe Aktarma)
 # ==============================================================================
 
 import gradio as gr
 import os
 import pandas as pd
-from langchain_core.documents import Document # HATA DÜZELTME: Doğrudan Core'dan import
+# Çözüm: LangChain'in kararlı çekirdek kütüphaneleri
+from langchain_core.documents import Document 
+from langchain_core.prompts import ChatPromptTemplate 
+from langchain_core.language_models.chat_models import BaseChatModel 
+from langchain_core.embeddings import Embeddings 
 
-# LangChain İçe Aktarmaları: RAG Mimarisi için gerekli temel bileşenler
+# LangChain İçe Aktarmaları: Zincir ve Modeller
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import Chroma # HATA DÜZELTME: Doğrudan Community'den import
-from langchain.chains import RetrievalQA         # Bu satırın çalışması beklenir
-from langchain.prompts import ChatPromptTemplate 
+from langchain_community.vectorstores import Chroma 
+from langchain.chains import RetrievalQA # Tekrar deneme
 
 # ==============================================================================
 # RAG PARAMETRELERİ VE OPTİMİZASYONLARI
@@ -35,9 +38,9 @@ KAYNAK: {context}
 # RAG ZİNCİRİNİ BAŞLATMA FONKSİYONU (SETUP)
 # ==============================================================================
 def setup_rag_chain():
-    """RAG zincirini kurar ve döndürür. Uygulama başladıktan sonra yalnızca bir kez çalışır."""
+    """RAG zincirini kurar ve döndürür."""
     
-    # 1. API Anahtarını Yükleme (Güvenlik Kriteri)
+    # 1. API Anahtarını Yükleme 
     try:
         GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
         if not GEMINI_API_KEY:
@@ -49,7 +52,7 @@ def setup_rag_chain():
     
     # 2. Veri Setini Okuma ve Dokümanları Oluşturma
     try:
-        DATA_FILE_PATH = 'erasmus_chatbot_dataset.csv' # HF Spaces'taki yerel dosya yolu
+        DATA_FILE_PATH = 'erasmus_chatbot_dataset.csv' 
         df = pd.read_csv(DATA_FILE_PATH)
         
         documents_for_rag = []
@@ -126,7 +129,7 @@ def chatbot_response(message, history):
     return full_response
 
 # ==============================================================================
-# GRADIO ARAYÜZ TANIMLAMASI (Web Arayüzü Kriteri)
+# GRADIO ARAYÜZ TANIMLAMASI
 # ==============================================================================
 iface = gr.ChatInterface(
     fn=chatbot_response,
