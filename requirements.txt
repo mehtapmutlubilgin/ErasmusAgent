@@ -1,10 +1,11 @@
 pandas
-gradio
+gradio==5.42.0
 chromadb
 sentence-transformers
-# Çekirdek LangChain paketlerini kararlı sürümlere sabitleme:
-langchain==0.1.18         # Bu versiyonun stabil olduğu bilinir.
-langchain-core==0.1.51    # Core bileşenleri için gerekli.
-langchain-community==0.0.38 # Community bileşenleri için gerekli.
-# Google entegrasyon paketini güncel tutun
-langchain-google-genai
+
+# LangChain paketleri (uyumlu sürümler)
+langchain==0.1.18
+langchain-core==0.1.51
+langchain-community==0.0.38
+langchain-google-genai==0.0.10
+
