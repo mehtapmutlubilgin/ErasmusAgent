@@ -1,9 +1,14 @@
 pandas
-langchain
-langchain-google-genai
-chromadb
-sentence-transformers
-gradio
-langchain-community
+gradio>=4.36.0
+chromadb>=0.5.3
+
+# LangChain'in modüler yapısına uygun paketler
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# Google Gemini için gerekli entegrasyon
+langchain-google-genai>=0.1.0
 
 
