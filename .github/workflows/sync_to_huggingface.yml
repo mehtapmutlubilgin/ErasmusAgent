@@ -1,1 +1,22 @@
+name: Sync to Hugging Face hub # İş Akışının Adı
 
+on:
+  push:
+    branches: [main] # Yalnızca 'main' (ana) dala push edildiğinde çalıştır
+  workflow_dispatch: # Manuel çalıştırmaya izin ver
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 # GitHub deponuzu çek
+        with:
+          fetch-depth: 0
+          lfs: true # Büyük dosyalar için Git LFS'i etkinleştir
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} # GitHub Secret'tan token'ı çek
+        run: |
+          # Space'e göndermek için token'ı URL'ye göm
+          git push -f https://USERNAME:$HF_TOKEN@huggingface.co/spaces/Mehtapmutlubilgin/ErasmusAgent main
