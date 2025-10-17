@@ -1,3 +1,4 @@
+%%writefile app.py
 # ==============================================================================
 # PROJE: Erasmus RAGent Chatbot (Akbank GenAI Bootcamp)
 # DOSYA: app.py (Gradio Arayüzü ve RAG Pipeline Tanımı)
@@ -6,12 +7,12 @@
 import gradio as gr
 import os
 import pandas as pd
-# HATA DÜZELTME: Document sınıfı artık 'langchain.schema' yerine 'langchain_core.documents' içindedir.
 from langchain_core.documents import Document 
 
 # LangChain İçe Aktarmaları: RAG Mimarisi için gerekli temel bileşenler
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.vectorstores import Chroma # Vektör veritabanı (langchain-community üzerinden çekilir)
+# HATA DÜZELTME: Chroma'yı doğrudan langchain_community'den import et
+from langchain_community.vectorstores import Chroma 
 from langchain.chains import RetrievalQA
 from langchain.prompts import ChatPromptTemplate 
 
