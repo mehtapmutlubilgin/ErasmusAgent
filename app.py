@@ -1,4 +1,4 @@
-%%writefile app.py
+
 # ==============================================================================
 # PROJE: Erasmus RAGent Chatbot (Akbank GenAI Bootcamp)
 # DOSYA: app.py (Gradio Arayüzü ve RAG Pipeline Tanımı)
@@ -7,21 +7,18 @@
 import gradio as gr
 import os
 import pandas as pd
-from langchain_core.documents import Document 
+from langchain_core.documents import Document # HATA DÜZELTME: Doğrudan Core'dan import
 
 # LangChain İçe Aktarmaları: RAG Mimarisi için gerekli temel bileşenler
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-# HATA DÜZELTME: Chroma'yı doğrudan langchain_community'den import et
-from langchain_community.vectorstores import Chroma 
-from langchain.chains import RetrievalQA
+from langchain_community.vectorstores import Chroma # HATA DÜZELTME: Doğrudan Community'den import
+from langchain.chains import RetrievalQA         # Bu satırın çalışması beklenir
 from langchain.prompts import ChatPromptTemplate 
 
 # ==============================================================================
 # RAG PARAMETRELERİ VE OPTİMİZASYONLARI
 # ==============================================================================
 
-# LLM'e rolünü ve davranış kurallarını belirten sistem şablonu (System Prompt)
-# Amaç: LLM'in cevabı kısıtlı kaynaklara dayandırmasını sağlamak ve halüsinasyonu önlemek.
 SYSTEM_TEMPLATE = """
 Sen bir Erasmus+ bilgilendirme uzmanısın. Kullanıcının sorusuna, öncelikle 
 SAĞLANAN KAYNAK METİNLERİ kullanarak cevap ver. 
@@ -41,7 +38,6 @@ def setup_rag_chain():
     """RAG zincirini kurar ve döndürür. Uygulama başladıktan sonra yalnızca bir kez çalışır."""
     
     # 1. API Anahtarını Yükleme (Güvenlik Kriteri)
-    # Hugging Face Spaces'ta 'GEMINI_API_KEY' adıyla Secret olarak tanımlanmıştır.
     try:
         GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
         if not GEMINI_API_KEY:
@@ -51,12 +47,11 @@ def setup_rag_chain():
         print(f"HATA: API Anahtarı yüklenemedi. Detay: {e}")
         return None
     
-    # 2. Veri Setini Okuma ve Dokümanları Oluşturma (Veri Hazırlık Kriteri)
+    # 2. Veri Setini Okuma ve Dokümanları Oluşturma
     try:
         DATA_FILE_PATH = 'erasmus_chatbot_dataset.csv' # HF Spaces'taki yerel dosya yolu
         df = pd.read_csv(DATA_FILE_PATH)
         
-        # Optimizasyon: Her Soru-Cevap çifti tek bir Document objesi yapılır.
         documents_for_rag = []
         for index, row in df.iterrows():
             doc_content = f"Kategori: {row['kategori']}. Soru: {row['soru']}. Cevap: {row['cevap']}"
@@ -112,7 +107,6 @@ qa_chain = setup_rag_chain()
 # GRADIO CHATBOT CEVAP FONKSİYONU
 # ==============================================================================
 def chatbot_response(message, history):
-    """Kullanıcı mesajını RAG zincirine gönderir ve çekilen kaynaklarla birlikte cevabı döndürür."""
     
     if qa_chain is None:
         return "Chatbot kurulumu başarısız oldu. Lütfen logları kontrol edin."
