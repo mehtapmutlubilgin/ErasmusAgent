@@ -2,8 +2,6 @@ pandas
 gradio==5.42.0
 chromadb
 sentence-transformers
-
-# LangChain paketleri (uyumlu sürümler)
 langchain==0.1.18
 langchain-core==0.1.51
 langchain-community==0.0.38
